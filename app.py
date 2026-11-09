@@ -78,7 +78,14 @@ passed, say so and explain what the next opportunity is.
 
 @st.cache_resource
 def get_client() -> genai.Client:
-    return genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+    # 60-second timeout and no silent retries, so problems show up as an
+    # error message instead of an endless spinner.
+    return genai.Client(
+        api_key=st.secrets["GEMINI_API_KEY"].strip(),
+        http_options=types.HttpOptions(
+            timeout=60_000, retry_options=types.HttpRetryOptions(attempts=1)
+        ),
+    )
 
 
 def to_gemini(messages: list[dict]) -> list[types.Content]:
@@ -177,5 +184,10 @@ if question:
             else:
                 answer = f"Something went wrong talking to the AI service (error {e.code}). Please try again."
             st.error(answer)
+            st.caption(f"Details for the developer: {getattr(e, 'message', '') or str(e)[:300]}")
+        except Exception as e:  # timeouts, network problems
+            answer = "The AI service didn't respond. Please try again in a minute."
+            st.error(answer)
+            st.caption(f"Details for the developer: {type(e).__name__}: {str(e)[:300]}")
 
     st.session_state.messages.append({"role": "assistant", "content": answer})
