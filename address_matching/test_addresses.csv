@@ -1,0 +1,13 @@
+id,address,note
+1,"1300 Perdido St, New Orleans, LA",City Hall (CBD)
+2,"225 Morgan St, New Orleans, LA",Algiers Courthouse (West Bank)
+3,"6500 Magazine St, New Orleans, LA",Audubon Zoo (Uptown)
+4,"1 Collins Diboll Cir, New Orleans, LA",New Orleans Museum of Art (City Park)
+5,"615 City Park Ave, New Orleans, LA",Delgado Community College (Board of Review hearings)
+6,"726 St Peter St, New Orleans, LA",Preservation Hall (French Quarter) - 'St' means Saint and Street
+7,"1500 Sugar Bowl Dr, New Orleans, LA",Caesars Superdome
+8,"6823 Saint Charles Avenue, New Orleans, LA",Tulane University - spelled-out Saint and Avenue
+9,"400 Poydras St, New Orleans, LA",Office tower (CBD)
+10,"5620 Read Blvd, New Orleans, LA",Hospital (New Orleans East)
+11,"3000 Veterans Memorial Blvd, Metairie, LA",Outside Orleans Parish - should NOT match
+12,"99999 Fake St, New Orleans, LA",Address that does not exist - should NOT match
