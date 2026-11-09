@@ -13,7 +13,7 @@ import streamlit as st
 from google import genai
 from google.genai import errors, types
 
-DEFAULT_MODEL = "gemini-3.8-flash"
+DEFAULT_MODEL = "gemini-3.5-flash-lite"  # fast free-tier model; 3.8-flash timed out
 MAX_QUESTIONS_PER_SESSION = 30  # stays well inside free-tier limits
 MAX_QUESTION_CHARS = 1500
 HISTORY_MESSAGES = 10  # past messages sent along with each new question
@@ -78,12 +78,12 @@ passed, say so and explain what the next opportunity is.
 
 @st.cache_resource
 def get_client() -> genai.Client:
-    # 60-second timeout and no silent retries, so problems show up as an
+    # 2-minute timeout and no silent retries, so problems show up as an
     # error message instead of an endless spinner.
     return genai.Client(
         api_key=st.secrets["GEMINI_API_KEY"].strip(),
         http_options=types.HttpOptions(
-            timeout=60_000, retry_options=types.HttpRetryOptions(attempts=1)
+            timeout=120_000, retry_options=types.HttpRetryOptions(attempts=1)
         ),
     )
 

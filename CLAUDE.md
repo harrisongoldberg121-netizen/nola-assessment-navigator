@@ -280,7 +280,7 @@ When building the chatbot, include these rules in its system prompt:
 ## 6. Draft chatbot (Layer 1)
 
 - **Live link:** https://nola-assessment-navigatorhg.streamlit.app (deployed 2026-11-08; code: https://github.com/harrisongoldberg121-netizen/nola-assessment-navigator)
-- **Built with:** Python + Streamlit, hosted free on Streamlit Community Cloud. AI model: Google Gemini (`gemini-3.8-flash`, free tier) via the `google-genai` SDK.
+- **Built with:** Python + Streamlit, hosted free on Streamlit Community Cloud. AI model: Google Gemini (`gemini-3.5-flash-lite`, free tier; `gemini-3.8-flash` timed out on the free tier, 2026-11-08) via the `google-genai` SDK.
 - **Files:** `app.py` (the chatbot), `requirements.txt` (packages), `DEPLOY.md` (how to put it online).
 - **Knowledge base:** `app.py` reads §2, §4 and §5 of *this file* at startup and puts them in the model's system prompt. **Editing this file changes what the chatbot knows.** Keep the section headings (`## 2.`, `## 4.`, `## 5.`) as they are, or update `extract_section` in `app.py`.
 - **Shows sources in answers:** yes. The system prompt requires numbered citations and a "Sources:" list (rule 4.1).
