@@ -5,6 +5,7 @@
 > Facts below were checked against official pages on 2026-11-04. Items still marked **[VERIFY]** could not be confirmed from an official source; see §9.
 
 ### Changelog
+- **2026-11-08 (later):** Deployed the chatbot (https://nola-assessment-navigatorhg.streamlit.app), switched to `gemini-3.5-flash-lite` after `gemini-3.8-flash` timed out, and ran the 10 test questions (6 ✅, 4 ⚠️; see §7).
 - **2026-11-08:** Part 2 data work. Added the Zillow ZHVI file (EDA, 5 charts), a data dictionary (`docs/data_dictionary.md`), address matching (`address_matching/`, 10/10 test addresses found), outside data from the city's permits API (`data/outside/`), and 10 test questions (`docs/test_questions.md`). Rewrote §3 and §8, and added data questions to §9.
 - **2026-11-04:** Corrected the appeal calendar. Summer 2026 open rolls were for the **2027** tax year (July 15 to Aug 17, 2026; appeals due Aug 20, 2026), not Aug 15/18. Resolved the Louisiana Tax Commission deadline (30 calendar days under LAC 61:V.3103). Replaced homestead, freeze and veteran rules with the Assessor's current requirements. Updated the worked example to the 2026 levy. Replaced general links with specific pages and dropped commercial sites as sources. Added chatbot files (§6).
 - **2026-10-21:** First draft.
@@ -291,21 +292,26 @@ When building the chatbot, include these rules in its system prompt:
 
 ## 7. Sample questions and answers
 
-**Part 2 test set (10 questions with expected answers): `docs/test_questions.md`.** It covers facts (Q1–7) and rules (Q8 no advice, Q9 out of scope, Q10 prototype disclosure). Fill in "How it did" once the chatbot is live. The Part 1 table below is kept for reference.
+Tested on the live chatbot (https://nola-assessment-navigatorhg.streamlit.app, `gemini-3.5-flash-lite`) on 2026-11-08. Full answers, expected answers, and grades are in **`docs/test_questions.md`** (10 questions: facts Q1–7, rules Q8–10).
 
-| # | Question | Chatbot answer (summary or screenshot) | Sources shown? | What it got wrong / missed |
+| # | Question | How it did | Sources shown? | Grade |
 |---|---|---|---|---|
-| 1 | How is my property tax calculated in New Orleans? | **[TODO]** | | |
-| 2 | How do I apply for the homestead exemption? | **[TODO]** | | |
-| 3 | What's the deadline to appeal my assessment? | **[TODO]** | | |
-| 4 | What does the 2027 reassessment mean for me? | **[TODO]** | | |
-| 5 | I'm 70. Can my assessment be frozen? | **[TODO]** | | |
+| 1 | How is my property tax calculated in New Orleans? | All steps correct (10%, $7,500 homestead, 121.20 + 10.79 mills, police/fire not exempt), but never computed the $3,056 total | Yes ([2], [5]), but cited [3] without listing it | ⚠️ |
+| 2 | What documents do I need for homestead? | All 5 documents correct, including no S&WB bills and every owner present | Yes ([1], [2]); one wrong citation | ✅ |
+| 3 | What's the deadline to appeal? | Correct 2026 dates (Aug 17 / Aug 20), the 30-day LTC rule, next chance summer 2027 | Yes | ✅ |
+| 4 | BOR denied me last month. How long for the LTC? | 30 vs 10 days explained correctly; missed that the 10-business-day window had likely already passed | Yes | ⚠️ |
+| 5 | I'm 70, $90K income. Can I be frozen? | Correct rules, but said "you likely qualify" (too sure); missed the freeze tax trap | Yes | ⚠️ |
+| 6 | What does the 2027 reassessment mean? | Correct: TY2028, summer 2027, rollback and roll forward | Yes | ✅ |
+| 7 | When is my 2027 bill due? | Said "I'm not sure," gave the 2026 date for context and the Treasury contact | Yes | ✅ |
+| 8 | Is my house worth $400K? Should I appeal? | Refused to value the home or advise, as it should; added made-up citations | Wrong citations | ⚠️ |
+| 9 | Jefferson Parish taxes? | Correctly said out of scope | Unneeded sources | ✅ |
+| 10 | Is this an official city site? | Said no, student prototype, and gave contacts | One wrong citation | ✅ |
 
-**What to check in each answer:** Did it cite specific pages? Did it use the corrected 2026 dates (Aug 17 and Aug 20, not Aug 15 and Aug 18)? Did it give $3,056 for the worked example, not $2,970? Did it give the 30-day LTC rule? Did it name a contact? Did it invent anything?
+**Score: 6 ✅, 4 ⚠️, 0 ❌.**
 
-Screenshots: `docs/screenshots/q1.png` … `q5.png` **[TODO]**
+Screenshots: `docs/screenshots/` **[TODO: add screenshots of each answer]**
 
-**Short note on errors:** **[TODO]**
+**Short note on errors:** The chatbot never invented a date, dollar amount, or rule, and it followed the no-advice, out-of-scope, and prototype rules every time. Its main weakness is **citations**: it sometimes puts a source number on a sentence that source doesn't support (Q2, Q8, Q10), or cites a number missing from its Sources list (Q1). It also doesn't finish the worked example unless asked (Q1), doesn't check a user's dates against today (Q4), and once sounded too sure about eligibility (Q5). The first model, `gemini-3.8-flash`, timed out on the free tier; `gemini-3.5-flash-lite` fixed that. **Next fixes:** tighten the system prompt's citation rule, require the worked-example total, compare user dates with today, and use "may qualify" plus the freeze tax trap.
 
 ---
 
