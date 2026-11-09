@@ -7,7 +7,7 @@ Expected answers come from CLAUDE.md §2 (source numbers refer to §2.10). Quest
 - ⚠️ mostly right, but missing something or a weak source
 - ❌ wrong, invented facts, or broke a rule
 
-**Chatbot version tested:** [TODO: live link + date]
+**Chatbot version tested:** https://nola-assessment-navigatorhg.streamlit.app
 
 | # | Question | Expected answer (key points) | Should cite | How it did | Grade |
 |---|---|---|---|---|---|
