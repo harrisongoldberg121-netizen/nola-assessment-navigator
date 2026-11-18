@@ -1,10 +1,11 @@
 # CLAUDE.md — NOLA Assessment Navigator
 
 > Instruction file for the coding agent (Claude Code / Cursor). Read this before every task.
-> Living document, updated all semester. Last updated: 2026-11-08 (Part 2: data work).
+> Living document, updated all semester. Last updated: 2026-11-18 (Part 3: Layers 1 + 2 working).
 > Facts below were checked against official pages on 2026-11-04. Items still marked **[VERIFY]** could not be confirmed from an official source; see §9.
 
 ### Changelog
+- **2026-11-18:** Added **Layer 2, property lookup** (`property_lookup.py`): address → City geocoder → City tax bill service → official 2026 and 2025 tax bill PDFs → assessed values, homestead, tax due, and the year-over-year change. The chatbot answers questions about the looked-up property and cites the bill as [P]. Tightened the system prompt after the Part 2 tests (citation rule, worked-example total, date checks, "may qualify", freeze tax trap). Added `docs/summary.md` (1-page summary) and `docs/demo_script.md`.
 - **2026-11-08 (later):** Deployed the chatbot (https://nola-assessment-navigatorhg.streamlit.app), switched to `gemini-3.5-flash-lite` after `gemini-3.8-flash` timed out, and ran the 10 test questions (6 ✅, 4 ⚠️; see §7).
 - **2026-11-08:** Part 2 data work. Added the Zillow ZHVI file (EDA, 5 charts), a data dictionary (`docs/data_dictionary.md`), address matching (`address_matching/`, 10/10 test addresses found), outside data from the city's permits API (`data/outside/`), and 10 test questions (`docs/test_questions.md`). Rewrote §3 and §8, and added data questions to §9.
 - **2026-11-04:** Corrected the appeal calendar. Summer 2026 open rolls were for the **2027** tax year (July 15 to Aug 17, 2026; appeals due Aug 20, 2026), not Aug 15/18. Resolved the Louisiana Tax Commission deadline (30 calendar days under LAC 61:V.3103). Replaced homestead, freeze and veteran rules with the Assessor's current requirements. Updated the worked example to the 2026 levy. Replaced general links with specific pages and dropped commercial sites as sources. Added chatbot files (§6).
@@ -32,7 +33,7 @@ Assume users are **not** tax experts. Use plain language, short answers, and def
 | 2 | **My property** | "What is my property assessed at? Did it change? Do I have homestead?" | 2025 and 2026 assessment rolls (§3), looked up by address or parcel number |
 | 3 | **Market context** | "How does my change compare to my neighborhood / similar properties?" | Aggregations across the rolls (by neighborhood, property class, tax district) |
 
-Part 1 of the project builds **Layer 1 only.**
+**Status (2026-11-18):** Layer 1 and Layer 2 work in the live chatbot. Layer 2 uses the City's public tax bills because the Assessor roll files were never received. Layer 3 is planned for the final.
 
 ---
 
@@ -169,6 +170,21 @@ EDA page: https://claude.ai/artifact/RvuZQtX8DwRw1f2tDU6gr9 (5 charts).
 ### 3.1b Address matching (Layer 2)
 Method, results and how to run: `address_matching/README.md`. In short: (1) geocode with the City's address-point geocoder, falling back to the US Census geocoder; (2) find the parcel at that point in the Assessor's GIS layer to get the **GEOPIN**; (3) compare the address with the parcel's Assessor account IDs (**PARID**, e.g. `1300-PERDIDOST`). Tested on 12 addresses: **10/10 real addresses found (9 exact, 1 near-match from an Assessor typo); 2/2 invalid addresses rejected.** The Assessor abbreviates **AV / BL / CR**, not AVE / BLVD / CIR.
 
+### 3.1c Property lookup in the live chatbot (Layer 2)
+Code: `property_lookup.py`. No API keys, all public City of New Orleans services:
+1. **Geocode** the typed address with the City address-point geocoder (`maps.nola.gov/.../AddressPointLocator`). A score under 90 means no match.
+2. **Tax bill number** at that point from the City's `WhereYa_Taxbill` map service (`gis.nola.gov/arcgis/rest/services/apps/WhereYa_Taxbill/MapServer`, layer 1: `SITEADDR`, `OWNERNME1`, `TAXBILLID`). This is the same service behind nola.gov/find-tax-bill. If several bills share the point, pick the one whose address matches.
+3. **Official tax bill PDFs** at `https://taxbills.nola.gov/pdfs/{year}/{bill}.pdf` for 2026 and 2025. Read page 1 with `pypdf`: `LAND ASSESSMENT`, `IMPROVEMENT ASSESSMENT`, `HOMESTEAD EXEMPTION`, `PROPERTY LOCATION`, and the `$` total due. Page 2 lists the tax by each taxing body (not used yet).
+4. The result shows as a card (total assessed value, change vs last year, homestead, bill total, links to both PDFs and the pay page), and it is added to the chatbot's instructions as a property record cited as **[P]**.
+
+**What we learned:**
+- Tested on public buildings: 400 Poydras St (assessed $5,532,520 in 2026, −8.9% vs 2025, tax $814,442.28 — matches the PDF) and 726 St Peter St (+25.7%). Fake and out-of-parish addresses are rejected.
+- **Exempt properties have no bill** (City Hall, Superdome, Audubon Zoo, the Algiers courthouse, a hospital). The tool says so instead of failing.
+- The **tax bill number is the same as the permits data's `pin`**, which answers open question 9.
+- Bills show **assessed** values, not market value, and the latest bill is tax year 2026. The 2027 values (set in summer 2026) show up on bills mailed around January 2027.
+- **Owner names** are on the bills and in the map service, but the tool never returns them (rule 3.4).
+- **Not yet tested:** a home that has homestead or a freeze. Test with an address the owner provides.
+
 ### 3.2 What we know so far about the roll files
 - Source: Orleans Parish Assessor's Office **[TODO: exact download URL and date pulled]**
 - Format / size: **[TODO: CSV/XLSX? number of rows?]**
@@ -278,11 +294,12 @@ When building the chatbot, include these rules in its system prompt:
 
 ---
 
-## 6. Draft chatbot (Layer 1)
+## 6. Chatbot (Layers 1 and 2)
 
 - **Live link:** https://nola-assessment-navigatorhg.streamlit.app (deployed 2026-11-08; code: https://github.com/harrisongoldberg121-netizen/nola-assessment-navigator)
 - **Built with:** Python + Streamlit, hosted free on Streamlit Community Cloud. AI model: Google Gemini (`gemini-3.5-flash-lite`, free tier; `gemini-3.8-flash` timed out on the free tier, 2026-11-08) via the `google-genai` SDK.
-- **Files:** `app.py` (the chatbot), `requirements.txt` (packages), `DEPLOY.md` (how to put it online).
+- **Files:** `app.py` (the chatbot), `property_lookup.py` (Layer 2 lookup), `requirements.txt` (packages: streamlit, google-genai, pypdf, requests), `DEPLOY.md` (how to put it online).
+- **Property lookup:** the "Look up a property" box at the top of the page. After a lookup, the chat can answer "Did my assessment go up?" or "Do I have homestead?" from the bill, cited as [P].
 - **Knowledge base:** `app.py` reads §2, §4 and §5 of *this file* at startup and puts them in the model's system prompt. **Editing this file changes what the chatbot knows.** Keep the section headings (`## 2.`, `## 4.`, `## 5.`) as they are, or update `extract_section` in `app.py`.
 - **Shows sources in answers:** yes. The system prompt requires numbered citations and a "Sources:" list (rule 4.1).
 - **Secrets:** the Gemini API key lives only in Streamlit Cloud → Settings → Secrets as `GEMINI_API_KEY`. Never commit it.
@@ -358,6 +375,6 @@ Screenshots: `docs/screenshots/` **[TODO: add screenshots of each answer]**
 **Data questions (from `docs/data_dictionary.md`):**
 7. Zillow file name: what does `uc` mean? Is the tier the 33rd–67th percentile (file name) or the 35th–65th (Zillow's page)?
 8. Zillow `SizeRank`: ranked by what, and why do ranks repeat and skip?
-9. Is the permits `pin` the same as the roll's account number? (It matches tax bill numbers.)
+9. ~~Is the permits `pin` the same as the tax bill number?~~ Yes: the City's tax bill service returns the same 9-character numbers (2026-11-18). Still unknown: does the Assessor roll use it too?
 10. Official list of permit `landuseshort` codes.
 11. Census ACS by ZIP needs a free API key. Sign up to add median income and owner-occupancy. Retry the FEMA flood claims API, which was down on 2026-11-08.
